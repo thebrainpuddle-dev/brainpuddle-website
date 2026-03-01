@@ -28,6 +28,27 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         e.preventDefault();
         setClaimStatus('loading');
         try {
+            // First, try to capture and upload the visual card
+            let cardImageUrl = '';
+            try {
+                const canvas = await captureBothSides();
+                if (canvas) {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const uploadRes = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: dataUrl })
+                    });
+                    if (uploadRes.ok) {
+                        const uploadData = await uploadRes.json();
+                        cardImageUrl = uploadData.imageUrl || '';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to generate and upload physical card image preview:", err);
+                // We don't fail the whole claim process just because the screenshot failed
+            }
+
             const res = await fetch('/api/claim-card', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -37,7 +58,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     address: claimForm.address,
                     score: analysisData?.score,
                     tier: analysisData?.tier,
-                    pokemonName: analysisData?.pokemon?.name || 'Unknown'
+                    pokemonName: analysisData?.pokemon?.name || 'Unknown',
+                    imageUrl: cardImageUrl
                 })
             });
             const data = await res.json();

@@ -16,7 +16,7 @@ export const handler: Handler = async (event, context) => {
     if (event.httpMethod === 'POST') {
         try {
             const payload = JSON.parse(event.body || '{}');
-            const { name, linkedinUrl, address, score, tier, pokemonName } = payload;
+            const { name, linkedinUrl, address, score, tier, pokemonName, imageUrl } = payload;
 
             if (!name || !linkedinUrl || !address) {
                 return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields" }) };
@@ -28,7 +28,7 @@ export const handler: Handler = async (event, context) => {
             // and we log it so they can see it in Netlify logs.
             if (!webhookUrl) {
                 console.log('--- NEW CARD CLAIM RECEIVED (Setup Pending) ---');
-                console.log(`Name: ${name}\nLinkedIn: ${linkedinUrl}\nAddress: ${address}\nScore: ${score}\nStage: ${pokemonName}`);
+                console.log(`Name: ${name}\nLinkedIn: ${linkedinUrl}\nAddress: ${address}\nScore: ${score}\nStage: ${pokemonName}\nImage URL: ${imageUrl}`);
                 console.log('Please add BrainPuddle to your Netlify Environment Variables to send this to Google Sheets automatically.');
 
                 return {
@@ -46,7 +46,8 @@ export const handler: Handler = async (event, context) => {
                 address,
                 score,
                 tier,
-                pokemonName
+                pokemonName,
+                imageUrl
             });
 
             return {
