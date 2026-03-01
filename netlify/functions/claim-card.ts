@@ -1,43 +1,31 @@
 import { Handler } from '@netlify/functions';
-import fs from 'fs';
-import path from 'path';
-
-// Note: In a real production app on Netlify, you typically use a database (like Supabase, Fauna, Firebase) 
-// because Netlify functions are stateless and local files don't persist across invocations reliably.
-// We'll use a simple mock database using a JSON file in the /tmp dir to simulate it, though it might reset.
-// A better approach if persistence is strictly needed without a DB setup is to use a simple online KV store. 
-// For this demo, we'll try to persist in a simple local file, but warn about limitations.
-
-const DB_FILE = path.join('/tmp', 'claims_db.json');
-
-const getClaims = () => {
-    try {
-        if (fs.existsSync(DB_FILE)) {
-            const data = fs.readFileSync(DB_FILE, 'utf-8');
-            return JSON.parse(data);
-        }
-    } catch (e) {
-        console.error("Error reading db", e);
-    }
-    return { count: 0, claims: [] };
-};
-
-const saveClaims = (data: any) => {
-    try {
-        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-    } catch (e) {
-        console.error("Error writing db", e);
-    }
-};
+import { getStore } from '@netlify/blobs';
 
 export const handler: Handler = async (event, context) => {
+    // Initialize the store
+    const store = getStore("brainpuddle_claims");
+
+    const getClaimsFromStore = async () => {
+        try {
+            const data = await store.get("claims_data", { type: "json" });
+            if (data) return data as any;
+        } catch (e) {
+            console.error("No existing store found or error reading", e);
+        }
+        return { count: 0, claims: [] };
+    };
+
+    const saveClaimsToStore = async (data: any) => {
+        await store.setJSON("claims_data", data);
+    };
+
     // Handle GET - just return the current count
     if (event.httpMethod === 'GET') {
-        const db = getClaims();
+        const db = await getClaimsFromStore();
         return {
             statusCode: 200,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ count: db.count, max: 100 })
+            body: JSON.stringify({ count: db.count || 0, max: 100 })
         };
     }
 
@@ -51,7 +39,9 @@ export const handler: Handler = async (event, context) => {
                 return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields" }) };
             }
 
-            const db = getClaims();
+            const db = await getClaimsFromStore();
+            db.count = db.count || 0;
+            db.claims = db.claims || [];
 
             if (db.count >= 100) {
                 return { statusCode: 400, body: JSON.stringify({ error: "All 100 physical cards have been claimed!" }) };
@@ -75,7 +65,7 @@ export const handler: Handler = async (event, context) => {
             db.claims.push(claim);
             db.count = db.claims.length;
 
-            saveClaims(db);
+            await saveClaimsToStore(db);
 
             return {
                 statusCode: 200,

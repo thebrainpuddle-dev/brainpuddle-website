@@ -12,6 +12,7 @@
     "remotion:render": "remotion render Trailer out/trailer.mp4"
   },
   "dependencies": {
+    "@netlify/blobs": "^10.7.0",
     "@netlify/functions": "^5.1.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",

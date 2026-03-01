@@ -295,7 +295,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                             value={rawText}
                                             onChange={(e) => { setRawText(e.target.value); setInputUrl(''); setResumeFile(null); }}
                                             rows={4}
-                                            style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', opacity: resumeFile || inputUrl ? 0.5 : 1, pointerEvents: resumeFile || inputUrl ? 'none' : 'auto', resize: 'vertical' }}
+                                            style={{ width: '100%', padding: '1rem', background: 'var(--bg-dark)', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)', color: 'var(--text-primary)', opacity: resumeFile || inputUrl ? 0.5 : 1, pointerEvents: resumeFile || inputUrl ? 'none' : 'auto', resize: 'vertical' }}
                                         />
                                     </div>
                                     <div className="input-group" style={{ marginTop: '1rem' }}>
