@@ -2,8 +2,12 @@ import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import * as pdfjsLib from 'pdfjs-dist';
 import ScoreReport from '../components/ai-score/ScoreReport';
 import PokemonCard from '../components/ai-score/PokemonCard';
+
+// Set the worker source for PDF.js to load robustly via CDN to prevent Vite bundling errors
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }) => {
     const [step, setStep] = useState<'input' | 'analyzing' | 'results'>('input');
@@ -176,16 +180,31 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             let data = rawText.trim();
 
             if (resumeFile) {
-                type = 'pdf';
-                data = await new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        const base64 = (reader.result as string).split(',')[1];
-                        resolve(base64);
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(resumeFile);
-                });
+                type = 'text'; // Send extracted text, bypassing the Lambda timeout
+                setAnalysisText('Extracting text locally from PDF...');
+
+                try {
+                    const arrayBuffer = await resumeFile.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    let fullText = "";
+
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                        fullText += pageText + "\n";
+                    }
+
+                    data = fullText.trim();
+                    if (!data) throw new Error("Could not extract any text from the PDF. It might be an image-only scan.");
+
+                    setTimeout(() => setAnalysisText('Cross-referencing AI capabilities...'), 500);
+                } catch (e: any) {
+                    console.error("Local PDF Extraction error", e);
+                    alert("Failed to read the PDF. Ensure it's not password-protected and contains detectable text.");
+                    setStep('input');
+                    return;
+                }
             } else if (inputUrl) {
                 type = 'url';
                 data = inputUrl;

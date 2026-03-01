@@ -1,6 +1,5 @@
 import { Handler } from '@netlify/functions';
 import axios from 'axios';
-const pdfParse = require('pdf-parse-new');
 
 const generateAnalysis = (input: string) => {
     let name = "Professional User";
@@ -64,20 +63,7 @@ export const handler: Handler = async (event, context) => {
 
         let extractedText = "";
 
-        if (type === 'pdf') {
-            console.log("PDF uploaded, extracting text...");
-            try {
-                const buffer = Buffer.from(data, 'base64');
-                const parsed = await pdfParse(buffer);
-                extractedText = parsed.text;
-                if (extractedText.length > 15000) {
-                    extractedText = extractedText.substring(0, 15000) + '...';
-                }
-            } catch (err: any) {
-                console.error("PDF Parsing Error:", err.message);
-                return { statusCode: 400, body: JSON.stringify({ error: "Failed to parse the PDF file. Please ensure it's a valid text-based PDF." }) };
-            }
-        } else if (type === 'url') {
+        if (type === 'url') {
             console.log("LinkedIn URL provided - calling Relevance AI webhook.");
             try {
                 if (!process.env.RELEVANCE_WEBHOOK_URL || !process.env.RELEVANCE_API_KEY) {
