@@ -1599,9 +1599,6 @@ a:visited {
   will-change: transform;
 }
 
-.pokemon-card-container.front-focused {
-  transform: scale(1.1);
-}
 
 @media (max-width: 500px) {
   .pokemon-card-container {
@@ -1640,7 +1637,7 @@ a:visited {
 }
 
 .pokemon-card-back {
-  transform: rotateY(180deg) translateZ(1px);
+  transform: rotateY(180deg);
 }
 
 .pokemon-card-front {
@@ -2117,10 +2114,6 @@ a:visited {
     width: min(92vw, 460px);
     max-width: 460px;
   }
-
-  .pokemon-card-container.front-focused {
-    transform: scale(1.04);
-  }
 }
 
 @media (max-width: 768px) {
@@ -2145,10 +2138,6 @@ a:visited {
   .pokemon-card-container {
     width: min(94vw, 420px);
     max-width: 420px;
-  }
-
-  .pokemon-card-container.front-focused {
-    transform: scale(1.02);
   }
 
   .pokemon-card-front {
@@ -2177,10 +2166,6 @@ a:visited {
   .pokemon-card-container {
     width: min(94vw, 365px);
     max-width: 365px;
-  }
-
-  .pokemon-card-container.front-focused {
-    transform: scale(1);
   }
 
   .pokemon-card-front,
