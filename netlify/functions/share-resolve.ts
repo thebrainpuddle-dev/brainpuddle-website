@@ -68,7 +68,17 @@ export const handler: Handler = async (event) => {
     }
 
     try {
-        const shareId = String(event.queryStringParameters?.id || '').trim();
+        // Netlify redirects can pass the id either as a query param (?id=...)
+        // or as a path segment: /.netlify/functions/share-resolve/<id>
+        const fromQuery = String(event.queryStringParameters?.id || '').trim();
+        const fromPath = (() => {
+            const p = String(event.path || '');
+            const marker = '/.netlify/functions/share-resolve/';
+            const idx = p.indexOf(marker);
+            if (idx === -1) return '';
+            return decodeURIComponent(p.slice(idx + marker.length)).trim();
+        })();
+        const shareId = fromQuery || fromPath;
         const origin = resolveSiteOrigin(event.headers as Record<string, string | undefined>);
         if (!shareId) {
             return {

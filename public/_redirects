@@ -2,11 +2,10 @@
 /api/*                 /.netlify/functions/:splat            200
 
 # Persistent share URLs (LinkedIn scrapes OG tags here)
-/s/*  /.netlify/functions/share-resolve?id=:splat  200
+/s/*  /.netlify/functions/share-resolve/:splat  200
 
 # PostHog reverse proxy (reduces adblock impact)
 /ingest/static/*  https://us.i.posthog.com/static/:splat  200
 /ingest/*         https://us.i.posthog.com/:splat         200
 
 /*  /index.html  200
-
