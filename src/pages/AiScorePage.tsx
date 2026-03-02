@@ -445,72 +445,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     ← Back to Studio
                 </Link>
 
-                {step !== 'analyzing' && (
-                    <section className="glass" style={{ marginBottom: '3rem', borderRadius: '1.4rem', border: 'var(--glass-border)', padding: '1.5rem' }}>
-                        <p style={{ margin: 0, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 700 }}>
-                            AI Score Guide
-                        </p>
-                        <h2 style={{ margin: '0.55rem 0 1rem 0', fontSize: 'clamp(1.5rem, 2.8vw, 2.1rem)' }}>
-                            AI Resilience Score: What, How, and Who
-                        </h2>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.8rem', marginBottom: '1rem' }}>
-                            <div style={{ border: 'var(--glass-border)', borderRadius: '0.9rem', background: 'var(--bg-dark)', padding: '0.95rem' }}>
-                                <h3 style={{ margin: 0, fontSize: '1rem' }}>What</h3>
-                                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                                    The AI Resilience Score shows how strongly your current profile can withstand automation pressure.
-                                </p>
-                            </div>
-                            <div style={{ border: 'var(--glass-border)', borderRadius: '0.9rem', background: 'var(--bg-dark)', padding: '0.95rem' }}>
-                                <h3 style={{ margin: 0, fontSize: '1rem' }}>How</h3>
-                                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                                    We analyze your profile's unique human leverage, derive your AI-Resistant Tier, and summarize next actions to strengthen your position.
-                                </p>
-                            </div>
-                            <div style={{ border: 'var(--glass-border)', borderRadius: '0.9rem', background: 'var(--bg-dark)', padding: '0.95rem' }}>
-                                <h3 style={{ margin: 0, fontSize: '1rem' }}>Who Should Use This</h3>
-                                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                                    Professionals, students, and teams evaluating role durability, upskilling priorities, and AI adoption readiness.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Evolution Graphic Section */}
-                        <div style={{ marginTop: '2rem', marginBottom: '2rem', textAlign: 'center', background: 'var(--bg-dark)', border: 'var(--glass-border)', borderRadius: '1.2rem', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.4rem' }}>The Evolution of AI Resilience</h3>
-                            <p style={{ margin: '0 0 2rem 0', color: 'var(--text-secondary)', maxWidth: '600px', lineHeight: 1.6 }}>
-                                Level up your career by evolving from an Execution Specialist into a Visionary AI Orchestrator guiding complex human-in-the-loop systems.
-                            </p>
-
-                            <img
-                                src="/ai-resilience-evolution.png"
-                                alt="Evolution from Execution Specialist to high resilience AI orchestrator"
-                                style={{ maxWidth: '100%', height: 'auto', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}
-                                loading="lazy"
-                            />
-
-                            {/* Grading Labels */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', width: '100%', marginTop: '1.5rem', gap: '1rem' }}>
-                                <div>
-                                    <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>&lt; 30 Score</span>
-                                    <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>Highly Replaceable</h4>
-                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Execution Focus</p>
-                                </div>
-                                <div>
-                                    <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>30 - 59 Score</span>
-                                    <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>At Risk</h4>
-                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Mixed Workflows</p>
-                                </div>
-                                <div>
-                                    <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>60+ Score</span>
-                                    <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>AI-Resistant</h4>
-                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Orchestration Focus</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                )}
-
                 <AnimatePresence mode="wait">
                     {step === 'input' && (
                         <motion.div
@@ -734,6 +668,72 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+                {step !== 'analyzing' && (
+                    <section className="glass" style={{ marginTop: '3rem', borderRadius: '1.4rem', border: 'var(--glass-border)', padding: '1.5rem' }}>
+                        <p style={{ margin: 0, fontSize: '0.75rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 700 }}>
+                            AI Score Guide
+                        </p>
+                        <h2 style={{ margin: '0.55rem 0 1rem 0', fontSize: 'clamp(1.5rem, 2.8vw, 2.1rem)' }}>
+                            AI Resilience Score: What, How, and Who
+                        </h2>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.8rem', marginBottom: '1rem' }}>
+                            <div style={{ border: 'var(--glass-border)', borderRadius: '0.9rem', background: 'var(--bg-dark)', padding: '0.95rem' }}>
+                                <h3 style={{ margin: 0, fontSize: '1rem' }}>What</h3>
+                                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                                    The AI Resilience Score shows how strongly your current profile can withstand automation pressure.
+                                </p>
+                            </div>
+                            <div style={{ border: 'var(--glass-border)', borderRadius: '0.9rem', background: 'var(--bg-dark)', padding: '0.95rem' }}>
+                                <h3 style={{ margin: 0, fontSize: '1rem' }}>How</h3>
+                                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                                    We analyze your profile's unique human leverage, derive your AI-Resistant Tier, and summarize next actions to strengthen your position.
+                                </p>
+                            </div>
+                            <div style={{ border: 'var(--glass-border)', borderRadius: '0.9rem', background: 'var(--bg-dark)', padding: '0.95rem' }}>
+                                <h3 style={{ margin: 0, fontSize: '1rem' }}>Who Should Use This</h3>
+                                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                                    Professionals, students, and teams evaluating role durability, upskilling priorities, and AI adoption readiness.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Evolution Graphic Section */}
+                        <div style={{ marginTop: '2rem', marginBottom: '2rem', textAlign: 'center', background: 'var(--bg-dark)', border: 'var(--glass-border)', borderRadius: '1.2rem', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.4rem' }}>The Evolution of AI Resilience</h3>
+                            <p style={{ margin: '0 0 2rem 0', color: 'var(--text-secondary)', maxWidth: '600px', lineHeight: 1.6 }}>
+                                Level up your career by evolving from an Execution Specialist into a Visionary AI Orchestrator guiding complex human-in-the-loop systems.
+                            </p>
+
+                            <img
+                                src="/ai-resilience-evolution.png"
+                                alt="Evolution from Execution Specialist to high resilience AI orchestrator"
+                                style={{ maxWidth: '100%', height: 'auto', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}
+                                loading="lazy"
+                            />
+
+                            {/* Grading Labels */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', width: '100%', marginTop: '1.5rem', gap: '1rem' }}>
+                                <div>
+                                    <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>&lt; 30 Score</span>
+                                    <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>Highly Replaceable</h4>
+                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Execution Focus</p>
+                                </div>
+                                <div>
+                                    <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>30 - 59 Score</span>
+                                    <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>At Risk</h4>
+                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Mixed Workflows</p>
+                                </div>
+                                <div>
+                                    <span style={{ color: '#F25F22', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>60+ Score</span>
+                                    <h4 style={{ margin: '0.4rem 0 0 0', fontSize: '1rem', color: 'var(--text-primary)' }}>AI-Resistant</h4>
+                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Orchestration Focus</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                )}
             </div>
         </main>
     );
