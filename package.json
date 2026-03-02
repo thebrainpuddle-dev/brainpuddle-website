@@ -27,6 +27,7 @@
     "framer-motion": "^12.29.2",
     "html2canvas": "^1.4.1",
     "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.5.207",
     "posthog-js": "^1.269.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
