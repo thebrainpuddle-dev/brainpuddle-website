@@ -2,11 +2,17 @@ import React, { useEffect, useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import * as pdfjsLib from 'pdfjs-dist';
 import ScoreReport from '../components/ai-score/ScoreReport';
 import PokemonCard from '../components/ai-score/PokemonCard';
 import ClaimPhysicalCard from '../components/ai-score/ClaimPhysicalCard';
 import { trackEvent } from '../lib/analytics';
 import { featureFlags } from '../lib/features';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+).toString();
 
 interface AnalysisResult {
     score: number;
@@ -393,16 +399,17 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             let data = rawText.trim();
 
             if (resumeFile) {
-                type = 'pdf';
-                data = await new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        const base64 = (reader.result as string).split(',')[1];
-                        resolve(base64);
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(resumeFile);
-                });
+                type = 'text';
+                const arrayBuffer = await resumeFile.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const pages: string[] = [];
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    pages.push(content.items.map((item) => ('str' in item ? item.str : '')).join(' '));
+                }
+                data = pages.join('\n').trim();
+                if (!data) throw new Error('Could not extract text from PDF. Try pasting your resume text instead.');
             } else if (inputUrl) {
                 type = 'url';
                 data = inputUrl;
