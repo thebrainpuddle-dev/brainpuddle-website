@@ -183,7 +183,7 @@ body {
 
 @media (max-width: 768px) {
   .hero-section {
-    padding-top: 7rem;
+    padding-top: 9rem;
     padding-bottom: 3rem;
   }
 }
@@ -1362,7 +1362,8 @@ a:visited {
 
 @media (max-width: 968px) {
   .results-grid-layout {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column-reverse;
     gap: 3rem;
   }
 }
