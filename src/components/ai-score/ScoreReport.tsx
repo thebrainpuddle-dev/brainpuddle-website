@@ -24,10 +24,10 @@ const ScoreReport: React.FC<ScoreReportProps> = ({ score, tier, tierColor, categ
         }
     }, [isInView, score]);
 
-    // Determine color based on score
+    // Determine color based on resilience score
     const getScoreColor = (value: number) => {
-        if (value < 40) return '#4caf50'; // Green - Safe
-        if (value < 70) return '#ffeb3b'; // Yellow - At Risk
+        if (value >= 60) return '#4caf50'; // Green - Safe
+        if (value >= 30) return '#ffeb3b'; // Yellow - At Risk
         return '#f44336'; // Red - Replaceable
     };
 
@@ -42,7 +42,7 @@ const ScoreReport: React.FC<ScoreReportProps> = ({ score, tier, tierColor, categ
             className="score-report-card glass"
         >
             <div className="report-header">
-                <h3 className="report-title">Replaceability Analysis</h3>
+                <h3 className="report-title">AI Resilience Analysis</h3>
                 <div className="tier-badge" style={{ backgroundColor: `${tierColor}15`, color: tierColor, border: `1px solid ${tierColor}40` }}>
                     {tier}
                 </div>
@@ -65,13 +65,13 @@ const ScoreReport: React.FC<ScoreReportProps> = ({ score, tier, tierColor, categ
                     </svg>
                     <div className="gauge-value">
                         <span className="number" style={{ color: scoreColor }}>{displayScore}</span>
-                        <span className="label">Index</span>
+                        <span className="label">Resilience</span>
                     </div>
                 </div>
                 <div className="score-context">
                     <p className="context-text">
-                        {score < 40 ? "Your unique human traits strongly protect your market value." :
-                            score < 70 ? "Parts of your workflow are highly automatable. Upskilling recommended." :
+                        {score >= 60 ? "Your unique human traits strongly protect your market value." :
+                            score >= 30 ? "Parts of your workflow are highly automatable. Upskilling recommended." :
                                 "High risk of workflow automation. Urgent pivot to strategic roles advised."}
                     </p>
                 </div>

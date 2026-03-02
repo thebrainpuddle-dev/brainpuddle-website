@@ -187,7 +187,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
             const shareLines = [
                 `I just checked my AI Resilience Score on BrainPuddle.`,
-                `Replaceability Index: ${analysisData.score}/100`,
+                `AI Resilience Score: ${100 - Number(analysisData.score)}/100`,
                 `Tier: ${analysisData.tier}`,
                 `Check yours: ${shareTarget}`
             ];
@@ -579,7 +579,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                 <div className="report-col">
                                     {analysisData && (
                                         <ScoreReport
-                                            score={analysisData.score}
+                                            score={100 - analysisData.score}
                                             tier={analysisData.tier}
                                             tierColor={analysisData.tierColor}
                                             categories={analysisData.categories}
@@ -676,9 +676,9 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                         <h3 style={{ margin: '0.2rem 0 0.8rem 0', fontSize: '1.08rem' }}>FAQ</h3>
                         <div style={{ display: 'grid', gap: '0.7rem' }}>
                             <details style={{ border: 'var(--glass-border)', borderRadius: '0.85rem', padding: '0.85rem 1rem', background: 'var(--bg-dark)' }}>
-                                <summary style={{ cursor: 'pointer', fontWeight: 700 }}>What does Replaceability Index mean?</summary>
+                                <summary style={{ cursor: 'pointer', fontWeight: 700 }}>What does AI Resilience Score mean?</summary>
                                 <p style={{ margin: '0.55rem 0 0 0', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                                    It is a 0-100 estimate of automation exposure. A higher score means higher replaceability risk.
+                                    It is a 0-100 measure of your career's defense against automation. A higher score means you are highly resilient and securely positioned.
                                 </p>
                             </details>
                             <details style={{ border: 'var(--glass-border)', borderRadius: '0.85rem', padding: '0.85rem 1rem', background: 'var(--bg-dark)' }}>

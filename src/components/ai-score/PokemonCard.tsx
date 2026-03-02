@@ -153,8 +153,8 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                             WebkitBoxOrient: 'vertical'
                         }}>{name}</h2>
                         <div className="card-hp">
-                            <span className="hp-label">INDEX</span>
-                            <span className="hp-value">{replaceabilityScore || hp}</span>
+                            <span className="hp-label">RESILIENCE</span>
+                            <span className="hp-value">{replaceabilityScore ? 100 - replaceabilityScore : hp}</span>
                             <div className="type-icon">{type === 'Creative' ? '✨' : type === 'Engineering' ? '⚙️' : '🧠'}</div>
                         </div>
                     </div>
