@@ -112,8 +112,24 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
     };
 
     const baseGradient = getTypeColor(type);
+
+    const isColorCloseToYellow = (rgbStr: string) => {
+        const match = rgbStr.match(/\d+/g);
+        if (!match) return false;
+        const r = parseInt(match[0], 10);
+        const g = parseInt(match[1], 10);
+        const b = parseInt(match[2], 10);
+        // Yellow is roughly high R, high G, low B
+        return r > 180 && g > 180 && b < 100;
+    };
+
+    // Swap primary and secondary colors if the primary color causes the yellow stars to blend in completely
+    const shouldSwapColors = hasExtractedColors && isColorCloseToYellow(statColors[0]);
+    const safeColor0 = shouldSwapColors ? statColors[1] : statColors[0];
+    const safeColor1 = shouldSwapColors ? statColors[0] : statColors[1];
+
     const typeGradient = hasExtractedColors
-        ? `linear-gradient(135deg, ${statColors[0]} 0%, ${statColors[1]} 50%, ${statColors[2]} 100%)`
+        ? `linear-gradient(135deg, ${safeColor0} 0%, ${safeColor1} 50%, ${statColors[2]} 100%)`
         : baseGradient;
 
     // Helper to extract rgb values and darken them for the white background on the back of the card

@@ -259,6 +259,25 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         }
     };
 
+    const smoothScrollTo = (targetY: number, duration: number = 800) => {
+        const startY = window.scrollY;
+        const difference = targetY - startY;
+        const startTime = performance.now();
+
+        const step = (currentTime: number) => {
+            const progress = (currentTime - startTime) / duration;
+            if (progress < 1) {
+                // Ease out cubic
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                window.scrollTo(0, startY + difference * easeOut);
+                requestAnimationFrame(step);
+            } else {
+                window.scrollTo(0, targetY);
+            }
+        };
+        requestAnimationFrame(step);
+    };
+
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -293,11 +312,13 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                     setImagePreview(dataUrl);
 
-                    // Auto-scroll the submit button back into view for mobile users
+                    // Auto-scroll the submit button back into view for mobile users slowly
                     setTimeout(() => {
                         const scanBtn = document.querySelector('.scan-btn');
                         if (scanBtn) {
-                            scanBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            const rect = scanBtn.getBoundingClientRect();
+                            const targetY = window.scrollY + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+                            smoothScrollTo(targetY, 1000); // 1-second gentle glide
                         }
                     }, 100);
                 };
@@ -371,7 +392,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         setAnalysisData(null);
         setAiRunId(null);
         setStep('analyzing');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        smoothScrollTo(0, 800);
         // Let the useEffect handle the rotating text
 
         trackEvent('ai_scan_submitted', {

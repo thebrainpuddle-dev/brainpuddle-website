@@ -46,7 +46,7 @@ const HeroSection: React.FC = () => {
                     Your next breakthrough<br />starts <span>here.</span>
                 </motion.h1>
                 <motion.p variants={itemVariants} className="hero-subtitle">
-                    We turn complex AI into products people actually use. Voice agents that close deals. Content engines that never sleep. Learning platforms that actually teach.
+                    Exploring intelligence across domains, systems and dimensions.
                 </motion.p>
                 <motion.div variants={itemVariants} className="hero-actions">
                     <button className="btn-primary" onClick={() => document.getElementById('what-we-do')?.scrollIntoView({ behavior: 'smooth' })}>See What We Build</button>
