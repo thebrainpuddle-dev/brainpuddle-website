@@ -86,6 +86,10 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             cardContainer.classList.remove('front-focused');
         }
 
+        const innerEl = cardContainer.querySelector('.pokemon-card-inner') as HTMLElement;
+        const oldInnerTransform = innerEl ? innerEl.style.transform : '';
+
+        if (innerEl) innerEl.style.transform = 'none';
         frontEl.style.transform = 'none';
         backEl.style.transform = 'none';
 
@@ -113,6 +117,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
             return canvas;
         } finally {
+            if (innerEl) innerEl.style.transform = oldInnerTransform;
             frontEl.style.transform = oldFrontTransform;
             backEl.style.transform = oldBackTransform;
             if (hadFrontFocus) {
@@ -339,6 +344,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         setAnalysisData(null);
         setAiRunId(null);
         setStep('analyzing');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         // Let the useEffect handle the rotating text
 
         trackEvent('ai_scan_submitted', {
@@ -510,18 +516,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                             style={{ opacity: resumeFile || rawText ? 0.5 : 1, pointerEvents: resumeFile || rawText ? 'none' : 'auto' }}
                                         />
                                     </div>
-                                    <div className="divider" style={{ margin: '1rem 0', fontSize: '0.8rem' }}><span>OR PASTE TEXT</span></div>
-                                    <div className="input-group">
-                                        <label htmlFor="rawText">Bio / Experience</label>
-                                        <textarea
-                                            id="rawText"
-                                            placeholder="Paste your resume text or bio here..."
-                                            value={rawText}
-                                            onChange={(e) => { setRawText(e.target.value); setInputUrl(''); setResumeFile(null); }}
-                                            rows={4}
-                                            style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', opacity: resumeFile || inputUrl ? 0.5 : 1, pointerEvents: resumeFile || inputUrl ? 'none' : 'auto', resize: 'vertical' }}
-                                        />
-                                    </div>
                                     <div className="input-group" style={{ marginTop: '1rem' }}>
                                         <label htmlFor="user-photo">Optional: Profile Photo (for Gamified Card)</label>
                                         <input
@@ -537,6 +531,18 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Ready for gamified transformation</span>
                                             </div>
                                         )}
+                                    </div>
+                                    <div className="divider" style={{ margin: '1rem 0', fontSize: '0.8rem' }}><span>OR PASTE TEXT</span></div>
+                                    <div className="input-group">
+                                        <label htmlFor="rawText">Bio / Experience</label>
+                                        <textarea
+                                            id="rawText"
+                                            placeholder="Paste your resume text or bio here..."
+                                            value={rawText}
+                                            onChange={(e) => { setRawText(e.target.value); setInputUrl(''); setResumeFile(null); }}
+                                            rows={4}
+                                            style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', opacity: resumeFile || inputUrl ? 0.5 : 1, pointerEvents: resumeFile || inputUrl ? 'none' : 'auto', resize: 'vertical' }}
+                                        />
                                     </div>
                                     <div className="divider" style={{ margin: '1.5rem 0' }}><span>OR</span></div>
 
