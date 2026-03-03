@@ -272,7 +272,6 @@ body {
 
 @media (max-width: 480px) {
   .hero-announcement-banner {
-    margin-top: 2.5rem;
     margin-bottom: 1.5rem;
   }
 
@@ -1046,7 +1045,7 @@ a:visited {
   }
 
   .hero-section {
-    padding: 0 1.25rem;
+    padding: 9rem 1.25rem 3rem;
   }
 
   .services-section {
