@@ -147,8 +147,8 @@ export const handler: Handler = async (event, context) => {
                 const pdfData = await parser.getText();
                 await parser.destroy();
                 extractedText = pdfData.text;
-                if (extractedText.length > 25000) {
-                    extractedText = extractedText.substring(0, 25000) + '...';
+                if (extractedText.length > 10000) {
+                    extractedText = extractedText.substring(0, 10000) + '...';
                 }
                 console.log("Successfully extracted text from PDF.", extractedText.substring(0, 100) + '...');
             } catch (err: any) {

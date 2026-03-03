@@ -72,7 +72,7 @@ export const handler: Handler = async (event) => {
         };
 
         const initials = name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
-        prompt = `Typography art, bold cool initials '${initials}'. Abstract background, Studio Ghibli inspired magical aesthetic. Futuristic floating letters zoomed out with plenty of negative space around the letters. The initials must be fully visible and perfectly centered within the frame without being cut off at the edges. Clean gradient background suitable for a trading card. Cinematic lighting, highly realistic 3D render.`;
+        prompt = `3D typography initials '${initials}'. The letters MUST be scaled down and placed in the exact dead center of the image, surrounded by massive amounts of empty negative space on all sides (top, bottom, left, and right). It is absolutely critical that the letters are small enough to have wide borders and do not touch or get cut off by the canvas edges. Studio Ghibli inspired magical aesthetic, clean smooth gradient background suitable for a trading card. Cinematic lighting, highly realistic minimal 3D render.`;
         reqBody.prompt = prompt;
 
         const createResponse = await axios.post('https://api.bfl.ai/v1/flux-pro-1.1', reqBody, {
