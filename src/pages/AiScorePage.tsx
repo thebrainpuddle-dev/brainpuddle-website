@@ -9,10 +9,7 @@ import ClaimPhysicalCard from '../components/ai-score/ClaimPhysicalCard';
 import { trackEvent } from '../lib/analytics';
 import { featureFlags } from '../lib/features';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
-    import.meta.url
-).toString();
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 interface AnalysisResult {
     score: number;
@@ -401,8 +398,10 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             if (resumeFile) {
                 type = 'text';
                 try {
+                    console.log('Attempting client-side PDF parsing...');
                     const arrayBuffer = await resumeFile.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    const uint8Array = new Uint8Array(arrayBuffer); // Convert ArrayBuffer to Uint8Array
+                    const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
                     const pages: string[] = [];
                     for (let i = 1; i <= pdf.numPages; i++) {
                         const page = await pdf.getPage(i);
@@ -411,8 +410,10 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     }
                     data = pages.join('\n').trim();
                     if (!data) throw new Error('empty');
+                    console.log('PDF parsed successfully. Extracted text length:', data.length);
                     // Truncate to avoid oversized payloads / OpenAI timeouts
                     if (data.length > 10000) {
+                        console.warn('Truncating PDF text to 10000 characters to avoid oversized payload.');
                         data = data.substring(0, 10000);
                     }
                 } catch (pdfErr) {
@@ -427,6 +428,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             }
 
             const payload = { type, data };
+            console.log('Sending analysis request with payload:', payload);
 
             const response = await fetch('/api/analyze', {
                 method: 'POST',
