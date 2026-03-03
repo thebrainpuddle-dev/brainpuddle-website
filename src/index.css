@@ -182,7 +182,7 @@ body {
 
 @media (max-width: 768px) {
   .hero-section {
-    padding-top: 12.5rem;
+    padding-top: 9rem;
     padding-bottom: 3rem;
   }
 }
@@ -272,6 +272,7 @@ body {
 
 @media (max-width: 480px) {
   .hero-announcement-banner {
+    margin-top: 2.5rem;
     margin-bottom: 1.5rem;
   }
 
