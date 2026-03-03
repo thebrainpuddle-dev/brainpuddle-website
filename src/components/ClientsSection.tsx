@@ -38,7 +38,13 @@ const partners = [
     {
         name: 'Antigravity',
         logo: (
-            <img src="/antigravity-logo.jpg" alt="Antigravity" style={{ height: '1.5rem', opacity: 0.5 }} className="hover:opacity-100 transition-opacity duration-500" />
+            <svg viewBox="0 0 160 24" className="h-6 fill-current opacity-40 hover:opacity-100 transition-opacity duration-500" xmlns="http://www.w3.org/2000/svg">
+                {/* Icon — official Antigravity path scaled to 24×24 */}
+                <g transform="translate(0, 0) scale(1)">
+                    <path d="M21.751 22.607c1.34 1.005 3.35.335 1.508-1.508C17.73 15.74 18.904 1 12.037 1 5.17 1 6.342 15.74.815 21.1c-2.01 2.009.167 2.511 1.507 1.506 5.192-3.517 4.857-9.714 9.715-9.714 4.857 0 4.522 6.197 9.714 9.715z" />
+                </g>
+                <text x="30" y="19" fontFamily="Inter, sans-serif" fontWeight="600" fontSize="18" letterSpacing="-0.5">Antigravity</text>
+            </svg>
         )
     },
     {
