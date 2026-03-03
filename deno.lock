@@ -11,6 +11,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@aws-sdk/client-s3@^3.914.0",
         "npm:@eslint/js@^9.39.1",
         "npm:@netlify/functions@^5.1.2",
         "npm:@react-three/drei@^10.7.7",
@@ -34,6 +35,8 @@
         "npm:globals@^16.5.0",
         "npm:html2canvas@^1.4.1",
         "npm:pdf-parse@^2.4.5",
+        "npm:pdfjs-dist@^5.5.207",
+        "npm:posthog-js@^1.269.1",
         "npm:react-dom@^19.2.0",
         "npm:react-router-dom@^7.13.1",
         "npm:react@^19.2.0",

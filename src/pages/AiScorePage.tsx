@@ -400,16 +400,27 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
             if (resumeFile) {
                 type = 'text';
-                const arrayBuffer = await resumeFile.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                const pages: string[] = [];
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const content = await page.getTextContent();
-                    pages.push(content.items.map((item) => ('str' in item ? item.str : '')).join(' '));
+                try {
+                    const arrayBuffer = await resumeFile.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    const pages: string[] = [];
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const content = await page.getTextContent();
+                        pages.push(content.items.map((item) => ('str' in item ? item.str : '')).join(' '));
+                    }
+                    data = pages.join('\n').trim();
+                    if (!data) throw new Error('empty');
+                    // Truncate to avoid oversized payloads / OpenAI timeouts
+                    if (data.length > 10000) {
+                        data = data.substring(0, 10000);
+                    }
+                } catch (pdfErr) {
+                    console.error('Client-side PDF parsing failed:', pdfErr);
+                    alert('Could not read this PDF. Please paste your resume text in the Bio field instead.');
+                    setStep('input');
+                    return;
                 }
-                data = pages.join('\n').trim();
-                if (!data) throw new Error('Could not extract text from PDF. Try pasting your resume text instead.');
             } else if (inputUrl) {
                 type = 'url';
                 data = inputUrl;

@@ -1,6 +1,5 @@
 import { Handler } from '@netlify/functions';
 import axios from 'axios';
-import { PDFParse } from 'pdf-parse';
 
 const getLinkedInSlug = (url: string) => {
     try {
@@ -138,22 +137,6 @@ export const handler: Handler = async (event, context) => {
                     console.error("Relevance API Error:", err.response?.data || err.message);
                     extractedText = buildLinkedInFallbackText(data || fallbackInput || "");
                 }
-            }
-        } else if (type === 'pdf') {
-            console.log("PDF base64 provided, parsing.");
-            try {
-                const pdfBuffer = Buffer.from(data, 'base64');
-                const parser = new PDFParse({ data: pdfBuffer });
-                const pdfData = await parser.getText();
-                await parser.destroy();
-                extractedText = pdfData.text;
-                if (extractedText.length > 10000) {
-                    extractedText = extractedText.substring(0, 10000) + '...';
-                }
-                console.log("Successfully extracted text from PDF.", extractedText.substring(0, 100) + '...');
-            } catch (err: any) {
-                console.error("PDF Parsing Error:", err.message);
-                extractedText = "Error parsing PDF. Treat this as a generic user.";
             }
         } else {
             console.log("Raw text/bio provided.");
