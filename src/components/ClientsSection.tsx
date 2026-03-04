@@ -13,14 +13,14 @@ const results = [
         name: "Upcoming Project Alpha",
         stat: "Q3",
         statDesc: "Launch target",
-        desc: "Exciting new AI integration currently in stealth development. Revolutionizing the way businesses interact with data.",
+        desc: "Exciting new Agents Integration currently in stealth development. Revolutionizing the way businesses interact with agents.",
         comingSoon: true
     },
     {
         name: "Upcoming Project Beta",
         stat: "Q4",
         statDesc: "Launch target",
-        desc: "Web for AI Agents — a new kind of interface living at the intersection of HCI and Ambient Computing. Not an app, not a dashboard. Something in between.",
+        desc: "Web for AI Agents a new kind of interface living at the intersection of HCI and Ambient Computing. Not an app, not a dashboard. Something in between.",
         comingSoon: true
     }
 ];
