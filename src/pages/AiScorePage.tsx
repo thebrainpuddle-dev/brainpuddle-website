@@ -344,53 +344,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         setIsSharing(true);
         trackEvent('ai_share_clicked', { aiRunId: aiRunId || null });
 
-        const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-        // iOS Safari blocks window.open and navigator.share after async calls.
-        // For iOS, we MUST use the pre-generated blob and trigger share immediately.
-        if (isAppleMobile && navigator.share) {
-            let blob = downloadBlob;
-            if (!blob) {
-                const canvas = await captureBothSides(true);
-                if (canvas) blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-            }
-            if (!blob) {
-                setIsSharing(false);
-                return;
-            }
-
-            // We skip the backend persistence /custom URL for the native iOS share to ensure it fires instantly
-            const shareLines = [
-                `I just checked my AI Resilience Score on BrainPuddle.`,
-                `AI Resilience Score: ${100 - Number(analysisData.score)}/100`,
-                `Tier: ${analysisData.tier}`,
-                `Check yours: https://brainpuddle.com${location.pathname}${location.search}`
-            ];
-            const shareText = shareLines.join('\n');
-
-            if (navigator.clipboard?.writeText) {
-                try {
-                    await navigator.clipboard.writeText(shareText);
-                    await new Promise(res => setTimeout(res, 100));
-                    alert("Your card is ready! 📸\n\nWe've copied your caption to your clipboard. Just hit 'Paste' when LinkedIn opens!");
-                } catch (e) {
-                    console.log("Clipboard write failed", e);
-                }
-            }
-
-            const file = new File([blob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });
-            if (navigator.canShare?.({ files: [file] })) {
-                try {
-                    await navigator.share({ files: [file] });
-                    trackEvent('ai_card_shared_ios', { aiRunId: aiRunId || null });
-                } catch (e) {
-                    console.error("iOS share cancelled or failed", e);
-                }
-            }
-            setIsSharing(false);
-            return;
-        }
-
         // --- DESKTOP / ANDROID FLOW BELOW ---
         // (This uses window.open and creates a persistent custom share URL image)
 
