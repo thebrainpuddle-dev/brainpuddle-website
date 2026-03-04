@@ -441,10 +441,22 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             const shareText = shareLines.join('\n');
             const linkedInShareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`;
 
-            if (navigator.clipboard?.writeText) {
-                navigator.clipboard.writeText(shareText).catch(() => {
-                    // Clipboard is optional; sharing should continue even if it fails.
-                });
+            if (isMobile) {
+                // Mobile LinkedIn App ignores text fed through URL intents or Web Share.
+                // We must explicitly copy to clipboard and notify the user to paste it.
+                if (navigator.clipboard?.writeText) {
+                    try {
+                        await navigator.clipboard.writeText(shareText);
+                        alert("We've copied your score to your clipboard! 📋\n\nWhen LinkedIn opens, simply 'Paste' it into your post.");
+                    } catch (err) {
+                        console.error("Failed to copy text on mobile", err);
+                    }
+                }
+            } else {
+                // Desktop fallback: just copy silently just in case they want it elsewhere
+                if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(shareText).catch(() => { });
+                }
             }
 
             // Navigate the pre-opened window to LinkedIn
