@@ -48,6 +48,11 @@ interface AnalysisResult {
     };
 }
 
+const isMobileDevice = () => {
+    if (typeof window === 'undefined') return false;
+    return /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && window.innerWidth <= 768;
+};
+
 const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }) => {
     const [step, setStep] = useState<'input' | 'analyzing' | 'results'>('input');
     const [inputUrl, setInputUrl] = useState('');
@@ -83,17 +88,15 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     }, []);
 
     // Pre-generate the download blob in the background when results are ready.
-    // This allows handleDownload to be fully synchronous, which is strictly
-    // required by iOS Safari to allow navigator.share() to work on click.
+    // This allows action handlers to be fully synchronous and resilient on mobile.
     useEffect(() => {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        if (isIOS && step === 'results' && analysisData && cardRef.current) {
+        if (isMobileDevice() && step === 'results' && analysisData && cardRef.current) {
             const generateBlob = async () => {
                 setIsGeneratingBlob(true);
                 try {
                     // Give Framer Motion and fonts a tiny moment to settle before capturing
                     await new Promise(resolve => setTimeout(resolve, 50));
-                    const canvas = await captureBothSides(true); // Always offscreen for iOS
+                    const canvas = await captureBothSides(true); // Always offscreen for mobile
                     if (!canvas) return;
 
                     const blob = await new Promise<Blob | null>((resolve) =>
@@ -296,29 +299,35 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         if (!analysisData) return;
 
         try {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isMobile = isMobileDevice();
 
-            // Use the pre-generated blob if ready (makes the click instant for iOS),
+            // Use the pre-generated blob if ready (makes the click instant for mobile),
             // otherwise generate on the fly with the appropriate platform strategy
             let blob = downloadBlob;
             if (!blob) {
-                const canvas = await captureBothSides(isIOS);
+                const canvas = await captureBothSides(isMobile);
                 if (!canvas) return;
                 blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
             }
             if (!blob) return;
 
-            // iOS Primary: Web Share API (native "Save Image" option without blank window flash)
-            if (isIOS && navigator.share) {
+            // Mobile Primary: Web Share API (native "Save Image" option without blank window flash)
+            if (isMobile && navigator.share) {
                 const file = new File([blob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });
                 if (navigator.canShare?.({ files: [file] })) {
-                    await navigator.share({ files: [file] });
-                    trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null, method: 'web_share' });
-                    return; // Done!
+                    try {
+                        await navigator.share({ files: [file] });
+                        trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null, method: 'web_share' });
+                        return; // Done!
+                    } catch (e) {
+                        // User cancelled or share failed, log and abort rather than forcing a web download
+                        console.error("Web share cancelled or failed", e);
+                        return;
+                    }
                 }
             }
 
-            // Standard fallback for Non-iOS (or iOS where Web Share is heavily restricted)
+            // Standard fallback for Desktop/Mac/iPad, or Mobile where Web Share is heavily restricted
             const blobUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`;
@@ -379,15 +388,23 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         await new Promise(resolve => setTimeout(resolve, 50));
 
         try {
-            const canvas = await captureBothSides();
+            const isMobile = isMobileDevice();
+            let blob = downloadBlob;
             let cardDataUrl = '';
+
+            if (!blob) {
+                const canvas = await captureBothSides(isMobile);
+                if (canvas) blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+            }
+
             let shareTarget = `${window.location.origin}/ai-score`;
 
-            if (canvas) {
-                const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-                if (blob) {
-                    cardDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                }
+            if (blob) {
+                cardDataUrl = await new Promise<string>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.readAsDataURL(blob!);
+                });
             }
 
             if (featureFlags.persistentShare && cardDataUrl) {
