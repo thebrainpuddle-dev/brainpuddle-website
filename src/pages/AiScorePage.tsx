@@ -60,6 +60,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const [aiRunId, setAiRunId] = useState<string | null>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
     const transitionTimeoutsRef = useRef<number[]>([]);
     const scanRequestIdRef = useRef(0);
 
@@ -158,6 +159,10 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         const opts = { backgroundColor: null, useCORS: true, scale: 2 };
         const hadFrontFocus = cardContainer.classList.contains('front-focused');
 
+        // Prevent user interaction during capture to avoid Framer Motion state desync
+        const oldPointerEvents = cardContainer.style.pointerEvents;
+        cardContainer.style.pointerEvents = 'none';
+
         // Temporarily remove transform/backface visibility for clean flat 2D capture
         const oldFrontTransform = frontEl.style.transform;
         const oldBackTransform = backEl.style.transform;
@@ -226,11 +231,14 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             if (hadFrontFocus) {
                 cardContainer.classList.add('front-focused');
             }
+            // Restore interaction
+            cardContainer.style.pointerEvents = oldPointerEvents;
         }
     };
 
     const handleDownload = async () => {
-        if (!analysisData) return;
+        if (!analysisData || isDownloading) return;
+        setIsDownloading(true);
 
         try {
             const canvas = await captureBothSides();
@@ -270,6 +278,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                 aiRunId: aiRunId || null,
                 reason: (error as Error)?.message || 'unknown'
             });
+        } finally {
+            setIsDownloading(false);
         }
     };
 
@@ -873,8 +883,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                     </p>
 
                                     <div className="card-actions" style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                        <button onClick={handleDownload} disabled={!analysisData} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content', opacity: analysisData ? 1 : 0.65, cursor: analysisData ? 'pointer' : 'not-allowed' }}>
-                                            <span>📥</span> Download
+                                        <button onClick={handleDownload} disabled={!analysisData || isDownloading} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content', opacity: analysisData && !isDownloading ? 1 : 0.65, cursor: analysisData && !isDownloading ? 'pointer' : 'not-allowed' }}>
+                                            <span>{isDownloading ? '⏳' : '📥'}</span> {isDownloading ? 'Downloading...' : 'Download'}
                                         </button>
                                         <button onClick={handleLinkedInShare} disabled={isSharing || !analysisData} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2', height: 'fit-content', opacity: isSharing || !analysisData ? 0.7 : 1, cursor: isSharing || !analysisData ? 'not-allowed' : 'pointer' }}>
                                             <span>🔗</span> {isSharing ? 'Opening LinkedIn...' : 'Share on LinkedIn'}
