@@ -418,6 +418,40 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             const shareText = shareLines.join('\n');
             const linkedInShareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`;
 
+            if (canvas) {
+                const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                if (blob) {
+                    cardDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+                    const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                    if (isAppleMobile && navigator.share) {
+                        // LinkedIn iOS app ignores the "text" property of Web Share API.
+                        // We must manually copy it to the clipboard so the user can paste it.
+                        if (navigator.clipboard?.writeText) {
+                            try {
+                                await navigator.clipboard.writeText(shareText);
+                                // Add a tiny delay to ensure clipboard resolves before share sheet blocks JS thread
+                                await new Promise(res => setTimeout(res, 100));
+                                alert("Your card is ready! 📸\n\nWe've copied your caption to your clipboard. Just hit 'Paste' when LinkedIn opens!");
+                            } catch (e) {
+                                console.log("Clipboard write failed, proceeding with share", e);
+                            }
+                        }
+
+                        const file = new File([blob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });
+                        if (navigator.canShare?.({ files: [file] })) {
+                            await navigator.share({
+                                files: [file]
+                            });
+
+                            trackEvent('ai_card_shared_ios', { aiRunId: aiRunId || null });
+                            if (shareWindow && !shareWindow.closed) shareWindow.close();
+                            return; // Done with iOS flow
+                        }
+                    }
+                }
+            }
+
             if (navigator.clipboard?.writeText) {
                 navigator.clipboard.writeText(shareText).catch(() => {
                     // Clipboard is optional; sharing should continue even if it fails.
