@@ -46,23 +46,50 @@ const getInitials = (name) =>
 
 const buildInitialsFallbackImage = (name) => {
     const initials = getInitials(name).replace(/[^A-Z0-9]/g, "").slice(0, 2) || "BP";
+
+    // Deterministic colour palette based on the name
+    const palettes = [
+        { bg1: '#667eea', bg2: '#764ba2', accent: '#a78bfa', text: '#ffffff', shadow: 'rgba(102,126,234,0.6)' },
+        { bg1: '#f093fb', bg2: '#f5576c', accent: '#fda4af', text: '#ffffff', shadow: 'rgba(240,147,251,0.6)' },
+        { bg1: '#4facfe', bg2: '#00f2fe', accent: '#7dd3fc', text: '#ffffff', shadow: 'rgba(79,172,254,0.6)' },
+        { bg1: '#43e97b', bg2: '#38f9d7', accent: '#6ee7b7', text: '#ffffff', shadow: 'rgba(67,233,123,0.6)' },
+        { bg1: '#fa709a', bg2: '#fee140', accent: '#fbbf24', text: '#ffffff', shadow: 'rgba(250,112,154,0.6)' },
+        { bg1: '#a18cd1', bg2: '#fbc2eb', accent: '#c4b5fd', text: '#ffffff', shadow: 'rgba(161,140,209,0.6)' },
+        { bg1: '#ffecd2', bg2: '#fcb69f', accent: '#fdba74', text: '#7c2d12', shadow: 'rgba(252,182,159,0.6)' },
+        { bg1: '#89f7fe', bg2: '#66a6ff', accent: '#93c5fd', text: '#ffffff', shadow: 'rgba(137,247,254,0.6)' },
+    ];
+    const hash = (name || '').split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    const p = palettes[hash % palettes.length];
+
     const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024" role="img" aria-label="Fallback profile image">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffe8d6"/>
-      <stop offset="50%" stop-color="#ffd3b3"/>
-      <stop offset="100%" stop-color="#ffb07c"/>
+      <stop offset="0%" stop-color="${p.bg1}"/>
+      <stop offset="100%" stop-color="${p.bg2}"/>
     </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.35)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="${p.shadow}" flood-opacity="0.8"/>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="25" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
   </defs>
-  <rect width="768" height="1024" fill="url(#bg)"/>
-  <g fill="none" stroke="rgba(255,255,255,0.35)">
-    <circle cx="130" cy="150" r="92"/>
-    <circle cx="650" cy="900" r="110"/>
-  </g>
-  <rect x="64" y="128" width="640" height="768" rx="40" fill="rgba(255,255,255,0.6)" stroke="rgba(255,255,255,0.8)" stroke-width="4"/>
-  <text x="384" y="565" text-anchor="middle" font-size="230" font-family="Inter, Arial, sans-serif" font-weight="800" fill="#2f1607" letter-spacing="8">${initials}</text>
-  <text x="384" y="645" text-anchor="middle" font-size="36" font-family="Inter, Arial, sans-serif" fill="#4f2c17" opacity="0.85">BrainPuddle Profile Card</text>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <circle cx="100" cy="80" r="90" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="700" cy="520" r="110" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="680" cy="100" r="60" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="120" cy="480" r="70" fill="rgba(255,255,255,0.04)"/>
+  <rect x="150" y="60" width="500" height="480" rx="40" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+  <rect x="150" y="60" width="500" height="240" rx="40" fill="url(#shine)"/>
+  <text x="400" y="280" text-anchor="middle" dominant-baseline="central" font-size="200" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="${p.accent}" opacity="0.3" filter="url(#glow)">${initials}</text>
+  <text x="400" y="280" text-anchor="middle" dominant-baseline="central" font-size="200" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="${p.text}" letter-spacing="10" filter="url(#shadow)">${initials}</text>
+  <text x="400" y="265" text-anchor="middle" dominant-baseline="central" font-size="200" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-weight="900" fill="rgba(255,255,255,0.15)" letter-spacing="10">${initials}</text>
 </svg>`;
     return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 };

@@ -178,7 +178,7 @@ const PokemonCard = forwardRef<HTMLDivElement, PokemonCardProps>(({
                     <div className="card-image-container">
                         <div className="card-image-bg">
                             {photoUrl ? (
-                                <img ref={imgRef} src={photoUrl} alt={name} className="card-photo" />
+                                <img ref={imgRef} src={photoUrl} alt={name} className="card-photo" style={photoUrl.startsWith('data:') ? { objectFit: 'contain', objectPosition: 'center' } : undefined} />
                             ) : (
                                 <div className="card-photo-placeholder">👤</div>
                             )}
