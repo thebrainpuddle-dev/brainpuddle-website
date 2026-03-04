@@ -232,78 +232,40 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const handleDownload = async () => {
         if (!analysisData) return;
 
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-        // iOS Safari: open blank window SYNCHRONOUSLY to preserve user gesture
-        // (window.open after any await is blocked by iOS)
-        let iosWindow: Window | null = null;
-        if (isIOS) {
-            iosWindow = window.open('about:blank', '_blank');
-        }
-
         try {
             const canvas = await captureBothSides();
-            if (!canvas) {
-                if (iosWindow && !iosWindow.closed) iosWindow.close();
-                return;
-            }
+            if (!canvas) return;
 
             const blob = await new Promise<Blob | null>((resolve) =>
                 canvas.toBlob(resolve, 'image/jpeg', 0.9)
             );
-            if (!blob) {
-                if (iosWindow && !iosWindow.closed) iosWindow.close();
-                return;
-            }
+            if (!blob) return;
 
-            if (isIOS) {
-                // Primary: try Web Share API (gives native "Save Image" option)
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+            // iOS Primary: Web Share API (native "Save Image" option without blank window flash)
+            if (isIOS && navigator.share) {
                 const file = new File([blob], `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`, { type: 'image/jpeg' });
-                if (navigator.share && navigator.canShare?.({ files: [file] })) {
-                    // Close the pre-opened window since share sheet will handle it
-                    if (iosWindow && !iosWindow.closed) iosWindow.close();
+                if (navigator.canShare?.({ files: [file] })) {
                     await navigator.share({ files: [file] });
-                } else {
-                    // Fallback: show image in the pre-opened window for long-press save
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                    if (iosWindow && !iosWindow.closed) {
-                        iosWindow.document.write(`
-                            <!DOCTYPE html>
-                            <html>
-                            <head>
-                                <meta name="viewport" content="width=device-width, initial-scale=1">
-                                <title>Save Your Card</title>
-                                <style>
-                                    body { margin: 0; padding: 20px; background: #f5f5f5; font-family: -apple-system, sans-serif; text-align: center; }
-                                    img { max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-                                    p { color: #666; margin: 16px 0; font-size: 15px; }
-                                </style>
-                            </head>
-                            <body>
-                                <p>📱 <strong>Long-press the image below</strong> and tap <em>"Save to Photos"</em></p>
-                                <img src="${dataUrl}" alt="AI Resilience Card" />
-                            </body>
-                            </html>
-                        `);
-                        iosWindow.document.close();
-                    }
+                    trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null, method: 'web_share' });
+                    return; // Done!
                 }
-            } else {
-                // Non-iOS: standard download via link.download
-                const blobUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`;
-                link.href = blobUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
             }
 
-            trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null });
+            // Standard fallback for Non-iOS (or iOS where Web Share is heavily restricted)
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`;
+            link.href = blobUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+
+            trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null, method: 'link_download' });
         } catch (error) {
             console.error('Failed to download image', error);
-            if (iosWindow && !iosWindow.closed) iosWindow.close();
             trackEvent('ai_card_download_failed', {
                 aiRunId: aiRunId || null,
                 reason: (error as Error)?.message || 'unknown'
@@ -317,9 +279,33 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         setIsSharing(true);
         trackEvent('ai_share_clicked', { aiRunId: aiRunId || null });
 
-        // iOS Safari blocks window.open after async calls, so open the window
-        // FIRST synchronously (preserving the user gesture), then navigate it.
-        const shareWindow = window.open('about:blank', '_blank');
+        // iOS Safari blocks window.open after async calls, so open the window FIRST
+        const shareWindow = window.open('', '_blank');
+
+        // Improve UX: show a loading state instead of a stark blank page
+        if (shareWindow) {
+            shareWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Preparing Share...</title>
+                    <style>
+                        body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f9fafb; font-family: -apple-system, sans-serif; }
+                        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+                        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                        h2 { color: #1e293b; margin: 0 0 8px 0; }
+                        p { color: #64748b; margin: 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="loader"></div>
+                    <h2>Generating your card...</h2>
+                    <p>Redirecting to LinkedIn in a moment</p>
+                </body>
+                </html>
+            `);
+        }
 
         // Let React render the loading UI
         await new Promise(resolve => setTimeout(resolve, 50));
