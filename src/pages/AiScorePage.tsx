@@ -60,7 +60,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const [aiRunId, setAiRunId] = useState<string | null>(null);
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
-    const [isDownloading, setIsDownloading] = useState(false);
     const transitionTimeoutsRef = useRef<number[]>([]);
     const scanRequestIdRef = useRef(0);
 
@@ -104,9 +103,10 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                 // Load the SVG into a fresh Image to get its natural size
                 const svgImg = new Image();
                 svgImg.src = src;
-                await new Promise<void>((resolve, reject) => {
-                    svgImg.onload = () => resolve();
-                    svgImg.onerror = () => reject(new Error('svg load failed'));
+                await new Promise<void>((resolve) => {
+                    const timer = setTimeout(resolve, 1500); // 1.5s max to prevent hangs
+                    svgImg.onload = () => { clearTimeout(timer); resolve(); };
+                    svgImg.onerror = () => { clearTimeout(timer); resolve(); };
                 });
 
                 // Compute cover-fit dimensions (fill container, crop excess — matches CSS object-fit: cover)
@@ -151,45 +151,40 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
     const captureBothSides = async () => {
         if (!cardRef.current) return null;
-        const cardContainer = cardRef.current;
-        const frontEl = cardContainer.querySelector('.pokemon-card-front') as HTMLElement;
-        const backEl = cardContainer.querySelector('.pokemon-card-back') as HTMLElement;
-        if (!frontEl || !backEl) return null;
 
-        const opts = { backgroundColor: null, useCORS: true, scale: 2 };
-        const hadFrontFocus = cardContainer.classList.contains('front-focused');
+        // Create an off-screen container to capture the card without mutating the visible DOM
+        const offscreen = document.createElement('div');
+        offscreen.style.position = 'fixed';
+        offscreen.style.top = '-9999px';
+        offscreen.style.left = '-9999px';
+        offscreen.style.pointerEvents = 'none';
+        document.body.appendChild(offscreen);
 
-        // Prevent user interaction during capture to avoid Framer Motion state desync
-        const oldPointerEvents = cardContainer.style.pointerEvents;
-        cardContainer.style.pointerEvents = 'none';
-
-        // Temporarily remove transform/backface visibility for clean flat 2D capture
-        const oldFrontTransform = frontEl.style.transform;
-        const oldBackTransform = backEl.style.transform;
-        if (hadFrontFocus) {
-            cardContainer.classList.remove('front-focused');
-        }
-
-        const innerEl = cardContainer.querySelector('.pokemon-card-inner') as HTMLElement;
-        const oldInnerTransform = innerEl ? innerEl.style.transform : '';
-
-        if (innerEl) innerEl.style.transform = 'none';
-        frontEl.style.transform = 'none';
-        backEl.style.transform = 'none';
-
-        // Save current display states
-        const oldBackDisplay = backEl.style.display;
-        const oldFrontDisplay = frontEl.style.display;
-
-        // Pre-rasterise any SVG data-URL images so html2canvas renders them correctly
-        const restoreSvg = await preRasterizeSvgImages(cardContainer);
+        const clone = cardRef.current.cloneNode(true) as HTMLElement;
+        offscreen.appendChild(clone);
 
         try {
+            const frontEl = clone.querySelector('.pokemon-card-front') as HTMLElement;
+            const backEl = clone.querySelector('.pokemon-card-back') as HTMLElement;
+            if (!frontEl || !backEl) return null;
+
+            const opts = { backgroundColor: null, useCORS: true, scale: 2 };
+
+            // Flatten transforms for a clean 2D capture on the clone
+            const innerEl = clone.querySelector('.pokemon-card-inner') as HTMLElement;
+            if (innerEl) innerEl.style.transform = 'none';
+            frontEl.style.transform = 'none';
+            backEl.style.transform = 'none';
+
+            clone.classList.remove('front-focused');
+
+            // Pre-rasterise SVGs on the clone so they render properly
+            await preRasterizeSvgImages(clone);
+
             // ONLY explicitly show FRONT, completely hide BACK to avoid iOS Safari bleed
             backEl.style.display = 'none';
-            frontEl.style.display = 'block'; // or flex etc, block is safe for capture
+            frontEl.style.display = 'block';
 
-            // Allow DOM to update before capture
             await new Promise(resolve => setTimeout(resolve, 50));
             const frontCanvas = await html2canvas(frontEl, opts);
 
@@ -220,25 +215,12 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
             return canvas;
         } finally {
-            // Restore SVG sources first
-            restoreSvg();
-            // Restore visibility!
-            backEl.style.display = oldBackDisplay;
-            frontEl.style.display = oldFrontDisplay;
-            if (innerEl) innerEl.style.transform = oldInnerTransform;
-            frontEl.style.transform = oldFrontTransform;
-            backEl.style.transform = oldBackTransform;
-            if (hadFrontFocus) {
-                cardContainer.classList.add('front-focused');
-            }
-            // Restore interaction
-            cardContainer.style.pointerEvents = oldPointerEvents;
+            document.body.removeChild(offscreen);
         }
     };
 
     const handleDownload = async () => {
-        if (!analysisData || isDownloading) return;
-        setIsDownloading(true);
+        if (!analysisData) return;
 
         try {
             const canvas = await captureBothSides();
@@ -278,8 +260,6 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                 aiRunId: aiRunId || null,
                 reason: (error as Error)?.message || 'unknown'
             });
-        } finally {
-            setIsDownloading(false);
         }
     };
 
@@ -883,8 +863,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                     </p>
 
                                     <div className="card-actions" style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                        <button onClick={handleDownload} disabled={!analysisData || isDownloading} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content', opacity: analysisData && !isDownloading ? 1 : 0.65, cursor: analysisData && !isDownloading ? 'pointer' : 'not-allowed' }}>
-                                            <span>{isDownloading ? '⏳' : '📥'}</span> {isDownloading ? 'Downloading...' : 'Download'}
+                                        <button onClick={handleDownload} disabled={!analysisData} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content', opacity: analysisData ? 1 : 0.65, cursor: analysisData ? 'pointer' : 'not-allowed' }}>
+                                            <span>📥</span> Download
                                         </button>
                                         <button onClick={handleLinkedInShare} disabled={isSharing || !analysisData} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2', height: 'fit-content', opacity: isSharing || !analysisData ? 0.7 : 1, cursor: isSharing || !analysisData ? 'not-allowed' : 'pointer' }}>
                                             <span>🔗</span> {isSharing ? 'Opening LinkedIn...' : 'Share on LinkedIn'}
