@@ -80,6 +80,74 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         };
     }, []);
 
+    /**
+     * html2canvas ignores CSS object-fit, so SVG data-URL images render
+     * distorted/cropped. This helper pre-rasterises the SVG onto a canvas
+     * at the exact container size (with contain-fit logic) and swaps the
+     * img src to a properly-fitted PNG before capture.
+     * Returns a restore function that puts the original src back.
+     */
+    const preRasterizeSvgImages = async (root: HTMLElement): Promise<() => void> => {
+        const imgs = root.querySelectorAll<HTMLImageElement>('img.card-photo');
+        const restorers: (() => void)[] = [];
+
+        for (const img of imgs) {
+            const src = img.src || img.getAttribute('src') || '';
+            if (!src.startsWith('data:image/svg') && !src.startsWith('data:image/svg+xml')) continue;
+
+            try {
+                // Get the container's rendered dimensions
+                const containerW = img.parentElement?.clientWidth || img.clientWidth || 400;
+                const containerH = img.parentElement?.clientHeight || img.clientHeight || 300;
+
+                // Load the SVG into a fresh Image to get its natural size
+                const svgImg = new Image();
+                svgImg.src = src;
+                await new Promise<void>((resolve, reject) => {
+                    svgImg.onload = () => resolve();
+                    svgImg.onerror = () => reject(new Error('svg load failed'));
+                });
+
+                // Compute contain-fit dimensions
+                const natW = svgImg.naturalWidth || 800;
+                const natH = svgImg.naturalHeight || 600;
+                const scale = Math.min(containerW / natW, containerH / natH);
+                const drawW = natW * scale;
+                const drawH = natH * scale;
+                const offsetX = (containerW - drawW) / 2;
+                const offsetY = (containerH - drawH) / 2;
+
+                // Rasterise to a canvas at 2x for crisp output
+                const cvs = document.createElement('canvas');
+                cvs.width = containerW * 2;
+                cvs.height = containerH * 2;
+                const ctx = cvs.getContext('2d');
+                if (!ctx) continue;
+                ctx.scale(2, 2);
+                ctx.drawImage(svgImg, offsetX, offsetY, drawW, drawH);
+
+                const rasterUrl = cvs.toDataURL('image/png');
+                const originalSrc = src;
+                const originalObjFit = img.style.objectFit;
+                const originalObjPos = img.style.objectPosition;
+
+                img.src = rasterUrl;
+                img.style.objectFit = 'fill';
+                img.style.objectPosition = 'center';
+
+                restorers.push(() => {
+                    img.src = originalSrc;
+                    img.style.objectFit = originalObjFit;
+                    img.style.objectPosition = originalObjPos;
+                });
+            } catch {
+                // If rasterisation fails, html2canvas will use the original SVG (acceptable fallback)
+            }
+        }
+
+        return () => restorers.forEach(fn => fn());
+    };
+
     const captureBothSides = async () => {
         if (!cardRef.current) return null;
         const cardContainer = cardRef.current;
@@ -107,6 +175,9 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
         // Save current display states
         const oldBackDisplay = backEl.style.display;
         const oldFrontDisplay = frontEl.style.display;
+
+        // Pre-rasterise any SVG data-URL images so html2canvas renders them correctly
+        const restoreSvg = await preRasterizeSvgImages(cardContainer);
 
         try {
             // ONLY explicitly show FRONT, completely hide BACK to avoid iOS Safari bleed
@@ -144,6 +215,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
 
             return canvas;
         } finally {
+            // Restore SVG sources first
+            restoreSvg();
             // Restore visibility!
             backEl.style.display = oldBackDisplay;
             frontEl.style.display = oldFrontDisplay;
