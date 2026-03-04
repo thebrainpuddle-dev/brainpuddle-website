@@ -61,6 +61,7 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
     const [downloadBlob, setDownloadBlob] = useState<Blob | null>(null);
+    const [isGeneratingBlob, setIsGeneratingBlob] = useState(false);
     const transitionTimeoutsRef = useRef<number[]>([]);
     const scanRequestIdRef = useRef(0);
 
@@ -87,9 +88,10 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
     useEffect(() => {
         if (step === 'results' && analysisData && cardRef.current) {
             const generateBlob = async () => {
+                setIsGeneratingBlob(true);
                 try {
                     // Give Framer Motion and fonts a tiny moment to settle before capturing
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await new Promise(resolve => setTimeout(resolve, 50));
                     const canvas = await captureBothSides();
                     if (!canvas) return;
 
@@ -99,6 +101,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                     if (blob) setDownloadBlob(blob);
                 } catch (err) {
                     console.error('Failed background card capture', err);
+                } finally {
+                    setIsGeneratingBlob(false);
                 }
             };
             generateBlob();
@@ -890,8 +894,8 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
                                     </p>
 
                                     <div className="card-actions" style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                        <button onClick={handleDownload} disabled={!analysisData} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content', opacity: analysisData ? 1 : 0.65, cursor: analysisData ? 'pointer' : 'not-allowed' }}>
-                                            <span>📥</span> Download
+                                        <button onClick={handleDownload} disabled={!analysisData || isGeneratingBlob} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content', opacity: analysisData && !isGeneratingBlob ? 1 : 0.65, cursor: analysisData && !isGeneratingBlob ? 'pointer' : 'not-allowed' }}>
+                                            <span>{isGeneratingBlob ? '⏳' : '📥'}</span> {isGeneratingBlob ? 'Preparing...' : 'Download'}
                                         </button>
                                         <button onClick={handleLinkedInShare} disabled={isSharing || !analysisData} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#0a66c2', color: 'white', borderColor: '#0a66c2', height: 'fit-content', opacity: isSharing || !analysisData ? 0.7 : 1, cursor: isSharing || !analysisData ? 'not-allowed' : 'pointer' }}>
                                             <span>🔗</span> {isSharing ? 'Opening LinkedIn...' : 'Share on LinkedIn'}
