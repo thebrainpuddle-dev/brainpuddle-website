@@ -441,32 +441,34 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             const shareText = shareLines.join('\n');
             const linkedInShareUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`;
 
-            if (isMobile) {
-                // Mobile LinkedIn App ignores text fed through URL intents or Web Share.
-                // We must explicitly copy to clipboard and notify the user to paste it.
-                if (navigator.clipboard?.writeText) {
-                    try {
-                        await navigator.clipboard.writeText(shareText);
-                        alert("We've copied your score to your clipboard! 📋\n\nWhen LinkedIn opens, simply 'Paste' it into your post.");
-                    } catch (err) {
-                        console.error("Failed to copy text on mobile", err);
-                    }
+            if (isMobile && navigator.share) {
+                // Mobile: Professional native share sheet flow (No clipboard hacks needed)
+                // This passes the raw URL to the LinkedIn App, which securely unfurls the rich Open Graph Card.
+                if (shareWindow && !shareWindow.closed) shareWindow.close(); // Close the loading tab as we don't need it on mobile
+
+                try {
+                    await navigator.share({ url: shareTarget });
+                    trackEvent('ai_share_created', { aiRunId: aiRunId || null, shareUrl: shareTarget });
+                } catch (err) {
+                    console.error("Native share cancelled or failed", err);
+                    trackEvent('ai_share_failed', { aiRunId: aiRunId || null, error: (err as Error)?.message || 'unknown' });
                 }
             } else {
-                // Desktop fallback: just copy silently just in case they want it elsewhere
+                // Desktop / Fallback: window.open intent
+                // Just copy silently just in case they want it elsewhere
                 if (navigator.clipboard?.writeText) {
                     navigator.clipboard.writeText(shareText).catch(() => { });
                 }
-            }
 
-            // Navigate the pre-opened window to LinkedIn
-            if (shareWindow && !shareWindow.closed) {
-                shareWindow.location.href = linkedInShareUrl;
-            } else {
-                // Fallback: navigate current page if popup was blocked
-                window.location.href = linkedInShareUrl;
+                // Navigate the pre-opened window to LinkedIn
+                if (shareWindow && !shareWindow.closed) {
+                    shareWindow.location.href = linkedInShareUrl;
+                } else {
+                    // Fallback: navigate current page if popup was blocked
+                    window.location.href = linkedInShareUrl;
+                }
+                trackEvent('ai_share_created', { aiRunId: aiRunId || null, shareUrl: shareTarget });
             }
-            trackEvent('ai_share_created', { aiRunId: aiRunId || null, shareUrl: shareTarget });
         } catch (error) {
             console.error('Share failed', error);
             // Close the blank window on error
