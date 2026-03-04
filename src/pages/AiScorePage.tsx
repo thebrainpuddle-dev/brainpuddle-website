@@ -165,7 +165,9 @@ const AiScorePage: React.FC<{ onContactOpen?: () => void }> = ({ onContactOpen }
             const link = document.createElement('a');
             link.download = `AI-Resilience-Card-${analysisData?.pokemon?.name || 'Score'}.jpg`;
             link.href = dataUrl;
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
             trackEvent('ai_card_downloaded', { aiRunId: aiRunId || null });
         } catch (error) {
             console.error('Failed to download image', error);
